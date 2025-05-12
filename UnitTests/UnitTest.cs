@@ -1,121 +1,70 @@
 using Lab5;
 
-namespace UnitTests;
-
 [TestClass]
-public class UnitTests
+public class WeightedGraphTests
 {
-    [TestMethod]
-    public void Graph1IsReachable()
-    {
-        UndirectedUnweightedGraph undirectedGraph = new UndirectedUnweightedGraph("../../../graphs/graph1.txt");
 
-        Assert.IsTrue(undirectedGraph.IsReachable("a", "c"));
-        Assert.IsTrue(undirectedGraph.IsReachable("e", "c"));
-        Assert.IsTrue(undirectedGraph.IsReachable("d", "e"));
-        Assert.IsTrue(undirectedGraph.IsReachable("d", "c"));
+    // Used AI to generate unit test ideas, refined from there
+    private UndirectedWeightedGraph graph;
+
+    [TestInitialize]
+    public void Setup()
+    {
+        graph = new UndirectedWeightedGraph("../../../graphs/graph1-weighted.txt");
     }
 
     [TestMethod]
-    public void Graph1ConnectedComponents()
+    public void ConnectedComponents_Returns1()
     {
-        UndirectedUnweightedGraph undirectedGraph = new UndirectedUnweightedGraph("../../../graphs/graph1.txt");
-
-        Assert.AreEqual(1, undirectedGraph.ConnectedComponents);
-    }
-
-
-    [TestMethod]
-    public void Graph2IsReachable()
-    {
-        UndirectedUnweightedGraph undirectedGraph = new UndirectedUnweightedGraph("../../../graphs/graph2.txt");
-
-        Assert.IsFalse(undirectedGraph.IsReachable("a", "c"));
-        Assert.IsFalse(undirectedGraph.IsReachable("e", "c"));
-        Assert.IsFalse(undirectedGraph.IsReachable("d", "e"));
-        Assert.IsFalse(undirectedGraph.IsReachable("b", "a"));
-        Assert.IsFalse(undirectedGraph.IsReachable("d", "b"));
-
+        Assert.AreEqual(1, graph.ConnectedComponents);
     }
 
     [TestMethod]
-    public void Graph2ConnectedComponents()
+    public void IsReachable_ValidNodes_ReturnsTrue()
     {
-        UndirectedUnweightedGraph undirectedGraph = new UndirectedUnweightedGraph("../../../graphs/graph2.txt");
-
-        Assert.AreEqual(5, undirectedGraph.ConnectedComponents);
-    }
-
-
-    [TestMethod]
-    public void Graph3IsReachable()
-    {
-        UndirectedUnweightedGraph undirectedGraph = new UndirectedUnweightedGraph("../../../graphs/graph3.txt");
-
-        Assert.IsTrue(undirectedGraph.IsReachable("a", "c"));
-        Assert.IsTrue(undirectedGraph.IsReachable("e", "d"));
-        Assert.IsTrue(undirectedGraph.IsReachable("h", "g"));
-
-        Assert.IsFalse(undirectedGraph.IsReachable("a", "h"));
-        Assert.IsFalse(undirectedGraph.IsReachable("c", "i"));
-        Assert.IsFalse(undirectedGraph.IsReachable("g", "b"));
-
+        Assert.IsTrue(graph.IsReachable("a", "c"));
+        Assert.IsTrue(graph.IsReachable("a", "e"));
+        Assert.IsTrue(graph.IsReachable("d", "c"));
     }
 
     [TestMethod]
-    public void Graph3ConnectedComponents()
+    public void DFSPathBetween_AtoC_ReturnsCorrectPath()
     {
-        UndirectedUnweightedGraph undirectedGraph = new UndirectedUnweightedGraph("../../../graphs/graph3.txt");
-
-        Assert.AreEqual(3, undirectedGraph.ConnectedComponents);
+        var cost = graph.DFSPathBetween("a", "c", out List<Node> path);
+        
+        Assert.AreEqual(7, cost);
+        CollectionAssert.AreEqual(
+            new List<string> { "a", "b", "c" },
+            path.ConvertAll(n => n.Name));
     }
 
     [TestMethod]
-    public void Graph4IsReachable()
+    public void BFSPathBetween_AtoD_ReturnsShortestEdges()
     {
-        UndirectedUnweightedGraph undirectedGraph = new UndirectedUnweightedGraph("../../../graphs/graph4.txt");
-
-        Assert.IsTrue(undirectedGraph.IsReachable("a", "c"));
-        Assert.IsTrue(undirectedGraph.IsReachable("e", "i"));
-        Assert.IsTrue(undirectedGraph.IsReachable("g", "b"));
-        Assert.IsTrue(undirectedGraph.IsReachable("c", "f"));
-        Assert.IsTrue(undirectedGraph.IsReachable("a", "d"));
-        Assert.IsTrue(undirectedGraph.IsReachable("b", "i"));
-
+        var cost = graph.BFSPathBetween("a", "d", out List<Node> path);
+        
+        Assert.AreEqual(3, cost);
+        CollectionAssert.AreEqual(
+            new List<string> { "a", "b", "d" },
+            path.ConvertAll(n => n.Name));
     }
 
     [TestMethod]
-    public void Graph4ConnectedComponents()
+    public void DijkstraPathBetween_AtoE_ReturnsShortestWeight()
     {
-        UndirectedUnweightedGraph undirectedGraph = new UndirectedUnweightedGraph("../../../graphs/graph4.txt");
-
-        Assert.AreEqual(1, undirectedGraph.ConnectedComponents);
+        var cost = graph.DijkstraPathBetween("a", "e", out List<Node> path);
+        
+        Assert.AreEqual(5, cost);
+        CollectionAssert.AreEqual(
+            new List<string> { "a", "b", "e" },
+            path.ConvertAll(n => n.Name));
     }
 
     [TestMethod]
-    public void SavannahIsReachable()
+    public void PathBetween_InvalidNodes_ReturnsZero()
     {
-        UndirectedUnweightedGraph undirectedGraph = new UndirectedUnweightedGraph("../../../graphs/Savannah.txt");
-
-        Assert.IsTrue(undirectedGraph.IsReachable("a", "c"));
-        Assert.IsTrue(undirectedGraph.IsReachable("e", "i"));
-        Assert.IsTrue(undirectedGraph.IsReachable("g", "b"));
-        Assert.IsTrue(undirectedGraph.IsReachable("c", "f"));
-        Assert.IsTrue(undirectedGraph.IsReachable("a", "j"));
-        Assert.IsTrue(undirectedGraph.IsReachable("b", "i"));
-
-
-        Assert.IsFalse(undirectedGraph.IsReachable("a", "d"));
-        Assert.IsFalse(undirectedGraph.IsReachable("d", "j"));
-
-    }
-
-    [TestMethod]
-    public void SavannahConnectedComponents()
-    {
-        UndirectedUnweightedGraph undirectedGraph = new UndirectedUnweightedGraph("../../../graphs/Savannah.txt");
-
-        Assert.AreEqual(2, undirectedGraph.ConnectedComponents);
+        var cost = graph.DijkstraPathBetween("a", "z", out List<Node> path);
+        Assert.AreEqual(0, cost);
+        Assert.AreEqual(0, path.Count);
     }
 }
-

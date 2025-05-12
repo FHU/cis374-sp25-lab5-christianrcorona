@@ -95,13 +95,30 @@ public class UndirectedWeightedGraph
 
         return node;
     }
-
+    public Node FindNode(string nodeName)
+    {
+        return Nodes.Find(node => node.Name == nodeName);
+    }
+    
     public int ConnectedComponents
     {
         get
         {
             int numConnectedComponents = 0;
 
+            foreach (var node in Nodes)
+            {
+                node.Color = Color.White;
+            }
+
+            foreach (var node in Nodes)
+            {
+                if (node.Color == Color.White)
+                {
+                    DFS(node, false);
+                    numConnectedComponents++;
+                }
+            }
             // choose a random vertex
             // do a DFS from that vertex
             // increment the CC count
@@ -176,29 +193,40 @@ public class UndirectedWeightedGraph
         // 1. initilize all the things 
         pathList = new List<Node>();
 
-        // pred[] => node name to its predecessor node
-        Dictionary<string, Node> pred = new Dictionary<string, Node>();
-        // add every node name to the dictionary with a null pred.
-        foreach (var node in Nodes)
-        {
-            pred[node.Name] = null;
-        }
-
-        // dist[] => node name to distance from the source node
-        Dictionary<string, int> dist = new Dictionary<string, int>();
-        // setup all distances to infinity
-        foreach (var node in Nodes)
-        {
-            dist[node.Name] = int.MaxValue;
-        }
-
         // initialize all colors to white
 
         var node1 = FindNode(node1name);
         var node2 = FindNode(node2name);
+        var pred = DFS(node1);
+
+        if (pred[node2] == null && node1 != node2){
+            return 0;
+        }
+
+        int totalCost = 0;
+        Node current = node2;
+
+        while (current != null)
+        {
+            pathList.Add(current);
+            Node next = pred[current];
+            if (next != null)
+            {
+                Neighbor neighbor = next.Neighbors.Find(n => n.Node == current);
+                totalCost += neighbor.Weight;
+            }
+            current = next;
+        }
+
+        pathList.Reverse();
+
+        if (pathList.Count > 0 && pathList[0] == node1){
+            return totalCost;
+        }
+
+        pathList.Clear();
 
         // 2. Do all the path finding computation/generation
-        DFSVisit(node1, node2, pred);
 
         // 3. Post-process the data structures and convert them to the right format.
 
@@ -315,7 +343,37 @@ public class UndirectedWeightedGraph
     public int BFSPathBetween(string node1, string node2, out List<Node> pathList)
     {
         pathList = new List<Node>();
+        Node start = FindNode(node1);
+        Node end = FindNode(node2);
 
+        var bfsResult = BFS(start);
+
+        if (bfsResult[end].dist == int.MaxValue){
+            return 0;
+        }
+
+        int totalCost = 0;
+        Node current = end;
+
+        while (current != null)
+        {
+            pathList.Add(current);
+            Node pred = bfsResult[current].pred;
+            if (pred != null)
+            {
+                Neighbor neighbor = pred.Neighbors.Find(n => n.Node == current);
+                totalCost += neighbor.Weight;
+            }
+            current = pred;
+        }
+
+        pathList.Reverse();
+
+        if (pathList.Count > 0 && pathList[0] == start){
+            return totalCost;
+        }
+
+        pathList.Clear();
 
         return 0;
     }
@@ -330,8 +388,49 @@ public class UndirectedWeightedGraph
 
         // HashSet<Node> visited = new HashSet<Node>();    
 
+        var distances = new Dictionary<Node, (Node pred, int cost)>();
+        var priorityQueue = new PriorityQueue<Node, int>();
 
-        return null;
+        foreach (var node in Nodes)
+        {
+            distances[node] = (null, int.MaxValue);
+            node.Color = Color.White;
+        }
+
+        distances[startingNode] = (null, 0);
+        priorityQueue.Enqueue(startingNode, 0);
+
+        while (priorityQueue.Count > 0)
+        {
+            var current = priorityQueue.Dequeue();
+
+            if (current.Color == Color.Black){
+                continue;
+            }
+
+            current.Color = Color.Black;
+
+            current.Neighbors.Sort();
+
+            foreach (var neighbor in current.Neighbors)
+            {
+                var neighborNode = neighbor.Node;
+
+                if (neighborNode.Color == Color.Black){
+                    continue;
+                }
+
+                int totalCost = distances[current].cost + neighbor.Weight;
+
+                if (totalCost < distances[neighborNode].cost)
+                {
+                    distances[neighborNode] = (current, totalCost);
+                    priorityQueue.Enqueue(neighborNode, totalCost);
+                }
+            }
+        }
+
+        return distances;
     }
 
     /// <summary>
@@ -345,7 +444,34 @@ public class UndirectedWeightedGraph
     public int DijkstraPathBetween(string node1, string node2, out List<Node> pathList)
     {
         pathList = new List<Node>();
+        Node start = FindNode(node1);
+        Node end = FindNode(node2);
+        
+        if(start == null || end == null){
+            return 0;
+        }
 
+        var dijkstraResult = Dijkstra(start);
+
+        if (dijkstraResult[end].cost == int.MaxValue){
+            return 0;
+
+        }
+
+        Node current = end;
+        while (current != null)
+        {
+            pathList.Add(current);
+            current = dijkstraResult[current].pred;
+        }
+
+        pathList.Reverse();
+
+        if (pathList.Count > 0 && pathList[0] == start){
+            return dijkstraResult[end].cost;
+        }
+
+        pathList.Clear();
         return 0;
     }
 
